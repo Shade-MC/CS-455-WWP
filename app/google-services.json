@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "352209806109",
+    "project_id": "worldwide-pong",
+    "storage_bucket": "worldwide-pong.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:352209806109:android:194238e90bef7cf427f7f4",
+        "android_client_info": {
+          "package_name": "com.example.cs_455_wwp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "352209806109-906liksj0m10o7ku78a3vvso3ip24e4b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cs_455_wwp",
+            "certificate_hash": "f432d0dbe3913c3e9802edb19b793e80f4f17bdf"
+          }
+        },
+        {
+          "client_id": "352209806109-c8ud08dpmlkcibnctbfpdspj5sltv3nu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBr6mHdu0B9P3RYTQe8NtRCWQU0RCWeDMA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "352209806109-c8ud08dpmlkcibnctbfpdspj5sltv3nu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
