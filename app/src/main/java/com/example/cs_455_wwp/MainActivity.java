@@ -2,6 +2,7 @@ package com.example.cs_455_wwp;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     Button locationBtn;
     TextView gpsText;
     FusedLocationProviderClient fusedLocationProviderClient;
+    Button mapButton;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -70,6 +72,19 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     ActivityCompat.requestPermissions(MainActivity.this,
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 44);
                 }
+            }
+        });
+
+        //add button to send the user to the location of the ball
+        mapButton = findViewById(R.id.mapButton);
+
+        //add code when map button is pressed
+        mapButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                //TODO: coords are hardcoded, need to update to get coords of where ball will land
+                sendLocation("45.732574,-122.634851");  //wsuv
+                //sendLocation("37.422219,-122.08364");  //googleplex
             }
         });
     }
@@ -179,5 +194,18 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             }
         });
     }
+
+
+    private void sendLocation(String coords) {
+        //make an intent to send location to a map
+        //modified from docs; https://developer.android.com/training/basics/intents/sending
+        android.net.Uri sendLocation = android.net.Uri.parse("geo:" + coords + "?z=14");
+        // Uri location = Uri.parse("geo:37.422219,-122.08364?z=14"); // z param is zoom level
+        android.content.Intent mapIntent = new android.content.Intent(Intent.ACTION_VIEW, sendLocation);
+
+        //send user into maps
+        startActivity(mapIntent);
+    }
+
 
 }
