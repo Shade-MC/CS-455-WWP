@@ -51,11 +51,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private GameThread gameThread;
     private boolean isRunning;
 
-    // initialize variables for GPS
-    Button locationBtn;
-    TextView gpsText;
-    FusedLocationProviderClient fusedLocationProviderClient;
-
     // view binding
     private ActivityMainBinding binding;
 
@@ -77,28 +72,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         surfaceView.getHolder().addCallback(this);
 
         this.ballStats = findViewById(R.id.ballStats);
-
-        // set up GPS variables
-        locationBtn = findViewById(R.id.locationBtn);
-        gpsText = findViewById(R.id.gpsStats);
-
-        // initialize fusedLocationProviderClient
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
-        locationBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v){
-                // check location permissions
-                if (ActivityCompat.checkSelfPermission(MainActivity.this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                    // once permission granted
-                    getLocation();
-                } else { // permission denied
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 44);
-                }
-            }
-        });
 
         // binding
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -268,36 +241,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 }
             }
         }
-    }
-
-    @SuppressLint("MissingPermission")
-    private void getLocation() {
-        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-            @Override
-            public void onComplete(@NonNull Task<Location> task) {
-                // initialize location
-                Location location = task.getResult();
-                if (location != null) {
-                    try {
-                        // initialize geoCoder
-                        Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
-                        // initialize address list
-                        List<Address> addresses = geocoder.getFromLocation(
-                                location.getLatitude(), location.getLongitude(), 1
-                        );
-
-                        // set TextView to GPS location info
-                        gpsText.setText(String.format("Latitude: %s\nLongitude: %s\nAddress: %s",
-                                addresses.get(0).getLatitude(),
-                                addresses.get(0).getLongitude(),
-                                addresses.get(0).getAddressLine(0))
-                        );
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
     }
 
 }
