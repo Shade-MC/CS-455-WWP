@@ -26,11 +26,11 @@ public class Ball {
     public void updatePosition(double deltaTime){
 //        System.out.println("deltaTime: " + deltaTime);
         // Calculate the speed in meters per hour
-        Vector3 speedInMetersPerHour = this.speed.scaled(3600);
-        speedInMetersPerHour.z = 0;
+        Vector3 horizontalSpeed = this.speed;
+        horizontalSpeed.z = 0;
 
         // Calculate the distance traveled in meters
-        double distanceTraveled = speedInMetersPerHour.length()  * deltaTime;
+        double distanceTraveled = horizontalSpeed.length()  * deltaTime;
 
         // Calculate the angle of travel in radians
         double angleOfTravel = Math.atan2(this.speed.y, this.speed.x);

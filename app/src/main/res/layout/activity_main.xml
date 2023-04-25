@@ -28,11 +28,11 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        android:id="@+id/locationBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/locationBtn"
-        android:text="Update Location"
         android:layout_marginBottom="50dp"
+        android:text="Update Location"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -48,5 +48,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/ballStats"
         app:layout_constraintVertical_bias="0.244" />
+
+    <Button
+        android:id="@+id/sync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="87dp"
+        android:layout_marginBottom="36dp"
+        android:text="Sync"
+        app:layout_constraintBottom_toTopOf="@+id/locationBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gpsStats" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

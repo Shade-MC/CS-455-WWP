@@ -3,6 +3,9 @@ package com.example.cs_455_wwp;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -10,30 +13,39 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
-import androidx.annotation.NonNull;
-
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpResponse;
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.HttpClient;
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.methods.HttpGet;
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.impl.client.HttpClientBuilder;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
 
+    private HttpClient httpClient;
     private TextView ballStats;
     private GameThread gameThread;
     private boolean isRunning;
 
+    Button syncButton;
     // initialize variables for GPS
     Button locationBtn;
     TextView gpsText;
@@ -51,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         this.ballStats = findViewById(R.id.ballStats);
 
+        syncButton = findViewById(R.id.sync);
         // set up GPS variables
         locationBtn = findViewById(R.id.locationBtn);
         gpsText = findViewById(R.id.gpsStats);
@@ -58,14 +71,36 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         // initialize fusedLocationProviderClient
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
+        // initialize HTTPClient
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        this.httpClient = builder.build();
+
+
         locationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v){
+            public void onClick(View v) {
                 // check location permissions
                 if (ActivityCompat.checkSelfPermission(MainActivity.this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     // once permission granted
                     getLocation();
+                } else { // permission denied
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 44);
+                }
+            }
+        });
+
+        syncButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // check location permissions
+                if (ActivityCompat.checkSelfPermission(MainActivity.this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    // once permission granted
+                    String position = getBallPosition();
+
+
                 } else { // permission denied
                     ActivityCompat.requestPermissions(MainActivity.this,
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 44);
@@ -178,6 +213,38 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 }
             }
         });
+    }
+
+    private String getBallPosition() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        Future<String> future = executor.submit(() -> {
+            HttpGet getBall = new HttpGet("http://192.168.50.223:8080/getPosition");
+            HttpResponse response = null;
+            String line = null;
+            try {
+                response = this.httpClient.execute(getBall);
+                InputStream inputStream = response.getEntity().getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                while ((line = reader.readLine()) != null) {
+                    String[] vectorString = line.split(",");
+                    System.out.println(Arrays.toString(vectorString));
+
+                }
+            } catch (IOException e) {
+                System.out.println("IOexemption");
+            }
+
+            return line;
+        });
+
+        try {
+            return future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            return null;
+        }
+
+
     }
 
 }
