@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             ExecutorService executor = Executors.newSingleThreadExecutor();
 
             executor.submit(() -> {
-                HttpGet getBall = new HttpGet("http://192.168.50.223:8080/getPosition");
+                HttpGet getBall = new HttpGet("http://10.0.2.2:8080/getPosition");
                 StringBuilder ballString = new StringBuilder();
                 try {
                     HttpResponse response = this.httpClient.execute(getBall);
