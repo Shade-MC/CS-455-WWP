@@ -61,7 +61,7 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
         binding.logoutBtn.setOnClickListener(new View.OnClickListener(){
            @Override
            public void onClick(View v) {
-               firebaseAuth.signOut();
+               firebaseAuth.getInstance().signOut();
                checkUser();
            }
         });

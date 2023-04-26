@@ -16,7 +16,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -25,10 +24,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
 
     // create db
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    // current available team number
+    int teamNum = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,21 +127,19 @@ public class MainActivity extends AppCompatActivity {
                         if (authResult.getAdditionalUserInfo().isNewUser()){
                             // new account is created
                             Toast.makeText(MainActivity.this, "Account Created!\n" + email, Toast.LENGTH_SHORT).show();
-                            // add new account to db
-                            Map<String, Object> data = new HashMap<>();
-                            data.put("name", email);
-                            data.put("points", 0);
-                            db.collection("users").document(email).set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
-                                        Toast.makeText(MainActivity.this, "New user added to db!", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
+                            // get reference to the document
+                            DocumentReference ref = FirebaseFirestore.getInstance().collection("teams").document(String.valueOf(teamNum));
+                            // update members by adding new account to team
+                            ref.update("members", FieldValue.arrayUnion(email));
                         } else {
                             // account is an existing user
                             Toast.makeText(MainActivity.this, "Existing Account!\n" + email, Toast.LENGTH_SHORT).show();
+
+                            // TESTING: increment the points of the team
+                            // get reference to the document
+                            DocumentReference ref = FirebaseFirestore.getInstance().collection("teams").document(String.valueOf(teamNum));
+                            // update the points
+                            ref.update("points", FieldValue.increment(1));
                         }
 
                         // start profile activity
