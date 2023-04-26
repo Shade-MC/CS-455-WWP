@@ -82,8 +82,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
-                //TODO: coords are hardcoded, need to update to get coords of where ball will land
-                sendLocation("45.732574,-122.634851");  //wsuv
+                String finalPosition = gameThread.gameBall.finalPositionToString();
+                sendLocation(finalPosition);
+                //sendLocation("45.732574,-122.634851");  //wsuv
                 //sendLocation("37.422219,-122.08364");  //googleplex
             }
         });
