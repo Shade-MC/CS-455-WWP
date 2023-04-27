@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 firebaseAuthWithGoogleAccount(account);
             } catch (Exception e) {
                 // Google sign-in failed
-                Log.d(TAG, "onActivityResult: " + e.getMessage());
+                Log.e(TAG, "onActivityResult: " + e.getMessage());
             }
         }
     }
