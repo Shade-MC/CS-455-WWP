@@ -1,183 +1,159 @@
 package com.example.cs_455_wwp;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
+import com.example.cs_455_wwp.databinding.ActivityMainBinding;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
+public class MainActivity extends AppCompatActivity {
 
-public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
+    // view binding
+    private ActivityMainBinding binding;
 
-    private TextView ballStats;
-    private GameThread gameThread;
-    private boolean isRunning;
+    private static final int RC_SIGN_IN = 100;
+    private GoogleSignInClient googleSignInClient;
 
-    // initialize variables for GPS
-    Button locationBtn;
-    TextView gpsText;
-    FusedLocationProviderClient fusedLocationProviderClient;
+    private FirebaseAuth firebaseAuth;
 
-    @SuppressLint("MissingInflatedId")
+    private static final String TAG = "GOOGLE_SIGN_IN_TAG";
+
+    // create db
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    // current available team number
+    int teamNum = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Set up the surface view
-        SurfaceView surfaceView = findViewById(R.id.gameView);
-        surfaceView.getHolder().addCallback(this);
+        // binding
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        this.ballStats = findViewById(R.id.ballStats);
+        // configure Google Sign-In
+        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
 
-        // set up GPS variables
-        locationBtn = findViewById(R.id.locationBtn);
-        gpsText = findViewById(R.id.gpsStats);
+        googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
 
-        // initialize fusedLocationProviderClient
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        // initialize Firebase authentication
+        firebaseAuth = FirebaseAuth.getInstance();
+        checkUser();
 
-        locationBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v){
-                // check location permissions
-                if (ActivityCompat.checkSelfPermission(MainActivity.this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                    // once permission granted
-                    getLocation();
-                } else { // permission denied
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 44);
-                }
-            }
+        // Google sign-in button
+        binding.googleSignInBtn.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View v){
+               // begin Google sign-in process
+               Intent intent = googleSignInClient.getSignInIntent();
+               startActivityForResult(intent, RC_SIGN_IN);
+           }
         });
+
     }
 
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        // Start the game thread when the surface is created
-        gameThread = new GameThread();
-        gameThread.setSurfaceHolder(holder);
-        gameThread.setRunning(true);
-        gameThread.start();
+    private void checkUser() {
+        FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+        // if user is already logged in,
+        if (firebaseUser != null){
+            // go to profile activity first
+            startActivity(new Intent(this, GameActivity.class));
+            finish();
+        }
     }
 
+    // handle result of the sign-in request
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        // Handle surface changes if needed
-    }
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        // Stop the game thread when the surface is destroyed
-        boolean retry = true;
-        gameThread.setRunning(false);
-        while (retry) {
+        // result returned from launching intent from GoogleSignInApi.getSignInIntent()
+        if (requestCode == RC_SIGN_IN){
+            Task<GoogleSignInAccount> accountTask = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
-                gameThread.join();
-                retry = false;
-            } catch (InterruptedException e) {
-                // Retry
+                // Google sign-in succeeded, so Firebase authenticate now
+                GoogleSignInAccount account = accountTask.getResult(ApiException.class);
+                firebaseAuthWithGoogleAccount(account);
+            } catch (Exception e) {
+                // Google sign-in failed
+                Log.e(TAG, "onActivityResult: " + e.getMessage());
             }
         }
     }
 
-    private class GameThread extends Thread {
-        private final Ball gameBall;
-        private boolean isRunning;
-        private long lastFrameTime;
+    private void firebaseAuthWithGoogleAccount(GoogleSignInAccount account) {
+        // start Firebase Auth with Google Account
+        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+        firebaseAuth.signInWithCredential(credential)
+                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                    @Override
+                    public void onSuccess(AuthResult authResult) { // login successful
+                        // retrieve logged-in user
+                        FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                        // retrieve the user's info
+                        String uid = firebaseUser.getUid();
+                        String email = firebaseUser.getEmail();
+                        Log.d(TAG, "onSuccess: User ID is " + uid);
+                        Log.d(TAG, "onSuccess: User Email is " + email);
 
-        public GameThread() {
-            this.gameBall = new Ball();
-            lastFrameTime = System.nanoTime();
-        }
+                        // check if they are a new user or an existing user
+                        if (authResult.getAdditionalUserInfo().isNewUser()){
+                            // new account is created
+                            Toast.makeText(MainActivity.this, "Account Created!\n" + email, Toast.LENGTH_SHORT).show();
+                            // get reference to the document
+                            DocumentReference ref = FirebaseFirestore.getInstance().collection("teams").document(String.valueOf(teamNum));
+                            // update members by adding new account to team
+                            ref.update("members", FieldValue.arrayUnion(email));
+                        } else {
+                            // account is an existing user
+                            Toast.makeText(MainActivity.this, "Existing Account!\n" + email, Toast.LENGTH_SHORT).show();
 
-        public void setSurfaceHolder(SurfaceHolder surfaceHolder) {
-        }
+                            // TESTING: increment the points of the team
+                            // get reference to the document
+                            DocumentReference ref = FirebaseFirestore.getInstance().collection("teams").document(String.valueOf(teamNum));
+                            // update the points
+                            ref.update("points", FieldValue.increment(1));
+                        }
 
-        public void setRunning(boolean isRunning) {
-            this.isRunning = isRunning;
-        }
-
-        @Override
-        public void run() {
-            while (isRunning) {
-                long currentFrameTime = System.nanoTime();
-                double deltaTime = (currentFrameTime - lastFrameTime) / 1e9;
-                lastFrameTime = currentFrameTime;
-                // Update the game state here
-                // For example, calculate the new position based on the speed vector
-
-                // Lock the canvas and draw the game objects here
-                // For example, use surfaceHolder.lockCanvas() to get a Canvas object
-
-                // Unlock the canvas and show the changes here
-                // For example, use surfaceHolder.unlockCanvasAndPost(Canvas) to show the changes
-                this.gameBall.updatePosition(deltaTime);
-                // Update the speed text view here
-
-                runOnUiThread(() -> ballStats.setText(gameBall.toString()));
-
-                // Sleep for a short period of time to control the frame rate
-                try {
-                    sleep(500);
-                } catch (InterruptedException e) {
-                    // Do nothing
-                }
-            }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private void getLocation() {
-        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-            @Override
-            public void onComplete(@NonNull Task<Location> task) {
-                // initialize location
-                Location location = task.getResult();
-                if (location != null) {
-                    try {
-                        // initialize geoCoder
-                        Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
-                        // initialize address list
-                        List<Address> addresses = geocoder.getFromLocation(
-                                location.getLatitude(), location.getLongitude(), 1
-                        );
-
-                        // set TextView to GPS location info
-                        gpsText.setText(String.format("Latitude: %s\nLongitude: %s\nAddress: %s",
-                                addresses.get(0).getLatitude(),
-                                addresses.get(0).getLongitude(),
-                                addresses.get(0).getAddressLine(0))
-                        );
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        // start profile activity
+                        startActivity(new Intent(MainActivity.this, GameActivity.class));
+                        finish();
                     }
-                }
-            }
-        });
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // login failed
+                        Log.d(TAG, "onFailure: Login Failed. " + e.getMessage());
+                    }
+                });
     }
 
 }
