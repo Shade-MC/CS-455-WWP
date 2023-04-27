@@ -24,13 +24,12 @@ public class Ball {
     }
 
     public void updatePosition(double deltaTime){
-//        System.out.println("deltaTime: " + deltaTime);
-        // Calculate the speed in meters per hour
-        Vector3 speedInMetersPerHour = this.speed.scaled(3600);
-        speedInMetersPerHour.z = 0;
+
+        Vector3 horizontalSpeed = new Vector3(this.speed);
+        horizontalSpeed.z = 0;
 
         // Calculate the distance traveled in meters
-        double distanceTraveled = speedInMetersPerHour.length()  * deltaTime;
+        double distanceTraveled = horizontalSpeed.length()  * deltaTime;
 
         // Calculate the angle of travel in radians
         double angleOfTravel = Math.atan2(this.speed.y, this.speed.x);
@@ -62,6 +61,19 @@ public class Ball {
 
         this.speed = Vector3.add(this.speed, this.acceleration.scaled((float) deltaTime));
 
+    }
+
+    public void setVectors(String vectorsString){
+
+        String[] ballStringStats = vectorsString.split(",");
+        double[] ballStats = new double[ballStringStats.length];
+        for (int i = 0; i < ballStringStats.length; ++i){
+            ballStats[i] = Float.parseFloat(ballStringStats[i]);
+        }
+
+        this.setPosition(new Vector3((float) ballStats[0], (float) ballStats[1], (float) ballStats[2]));
+        this.setSpeed(new Vector3((float) ballStats[3], (float) ballStats[4], (float) ballStats[5]));
+        this.setAcceleration(new Vector3((float) ballStats[6], (float) ballStats[7], (float) ballStats[8]));
     }
 
     public Vector3 getSpeed() {
