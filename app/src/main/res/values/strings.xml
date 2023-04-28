@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">CS-455-WWP</string>
+    <string name="login_text">Logged in as</string>
+    <string name="email_text">Email</string>
+    <string name="logout_button">Log Out</string>
+    <string name="location_text">Your Location</string>
+    <string name="update_location_button">Update Location</string>
+    <string name="map_button">Open in Maps</string>
+    <string name="sync_button">Sync</string>
 </resources>
