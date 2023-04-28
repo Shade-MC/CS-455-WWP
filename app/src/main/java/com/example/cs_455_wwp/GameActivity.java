@@ -10,6 +10,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -96,14 +97,9 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mapButton = findViewById(R.id.mapButton);
 
         //add code when map button is pressed
-        mapButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v){
-                String finalPosition = gameThread.gameBall.finalPositionToString();
-                sendLocation(finalPosition);
-                //sendLocation("45.732574,-122.634851");  //wsuv
-                //sendLocation("37.422219,-122.08364");  //googleplex
-            }
+        mapButton.setOnClickListener(v -> {
+            String finalPosition = gameThread.gameBall.finalPositionToString();
+            sendLocation(finalPosition);
         });
 
         // Set up the surface view
