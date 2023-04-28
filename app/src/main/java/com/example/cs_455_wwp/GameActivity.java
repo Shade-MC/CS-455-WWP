@@ -39,6 +39,8 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     // initialize variables for GPS
     Button locationBtn;
+    Button mapButton;
+
     TextView gpsText;
     FusedLocationProviderClient fusedLocationProviderClient;
 
@@ -85,6 +87,20 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     ActivityCompat.requestPermissions(GameActivity.this,
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 44);
                 }
+            }
+        });
+
+        //add button to send the user to the location of the ball
+        mapButton = findViewById(R.id.mapButton);
+
+        //add code when map button is pressed
+        mapButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                String finalPosition = gameThread.gameBall.finalPositionToString();
+                sendLocation(finalPosition);
+                //sendLocation("45.732574,-122.634851");  //wsuv
+                //sendLocation("37.422219,-122.08364");  //googleplex
             }
         });
 
@@ -140,6 +156,17 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 }
             }
         });
+    }
+
+    private void sendLocation(String coords) {
+        //make an intent to send location to a map
+        //modified from docs; https://developer.android.com/training/basics/intents/sending
+        android.net.Uri sendLocation = android.net.Uri.parse("geo:" + coords + "?z=14");
+        // Uri location = Uri.parse("geo:37.422219,-122.08364?z=14"); // z param is zoom level
+        android.content.Intent mapIntent = new android.content.Intent(Intent.ACTION_VIEW, sendLocation);
+
+        //send user into maps
+        startActivity(mapIntent);
     }
 
     @Override
