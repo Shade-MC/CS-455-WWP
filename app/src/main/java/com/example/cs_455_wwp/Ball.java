@@ -6,9 +6,9 @@ import com.google.ar.sceneform.math.Vector3;
 
 
 public class Ball {
-    private Vector3 position;
-    private Vector3 speed;
-    private Vector3 acceleration;
+    private Vector3 position;  //lat/long for x/y, meters for altitude
+    private Vector3 speed;  //meters/second
+    private Vector3 acceleration;  //meters/second^2
     private static final double EARTH_RADIUS = 6378137.0; // in meters
 
     public Ball(){
@@ -98,6 +98,63 @@ public class Ball {
 
     public void setPosition(Vector3 position) {
         this.position = position;
+    }
+
+    public double getTimeRemaining() {
+        //returns the time remaining, as a double representing seconds
+        //time is just how long till the balls altitude is 0, we should be able to calculate that with kinematics
+        //returns -1 on an error
+        double discriminant = (this.speed.z * this.speed.z) + (2 * this.acceleration.z * (-this.position.z));
+        if (discriminant < 0) {
+            //using quadratic formula for d = vt + .5at^2 would lead to an imaginary number, which shouldn't happen
+            return -1;
+        }
+        //accounting for both the plus and minus in the quadratic formula
+        double plusSpeed = ((-this.speed.z) + Math.sqrt(discriminant)) / this.acceleration.z;
+        double minusSpeed = ((-this.speed.z) - Math.sqrt(discriminant)) / this.acceleration.z;
+
+        //return which ever one is positive, the negative one was how long ago the ball last landed
+        if (plusSpeed >= 0) {
+            return plusSpeed;
+        }
+        return minusSpeed;
+    }
+
+    public Vector3 getFinalPosition()
+    {
+        //returns the balls final position, as a Vector3 representing Lat. and Long and altitude.
+        //altitude should just be 0 meters
+        //code might be buggy over long distances, esp when going around the Earth
+        //get some values from elsewhere
+        Vector3 finalPosition = this.position;
+        double time = getTimeRemaining();
+        double metersPerDegree = 2.0 * Math.PI * EARTH_RADIUS / 360.0;
+        //calculate distance traveled
+        double deltaX = this.speed.x * time + 0.5 * this.acceleration.x * time * time;  //might need to account form longitude
+        double deltaY = this.speed.y * time + 0.5 * this.acceleration.y * time * time;
+        //convert from meters to degrees, and add to the current position (stored in final position)
+        finalPosition.x += deltaX / metersPerDegree;
+        finalPosition.y += deltaY / metersPerDegree;
+        finalPosition.z = 0; //should be landing, we can assume
+        //account for overflow
+        //code borrowed and modified from Eric
+        if (Math.abs(finalPosition.x) > 180){
+            float over = finalPosition.x - (180 * Math.signum(finalPosition.x));
+            finalPosition.x *= -1;
+            finalPosition.x += over;
+        }
+        if (Math.abs(finalPosition.y) > 90){
+            float over = finalPosition.y - (90 * Math.signum(finalPosition.y));
+            finalPosition.y *= -1;
+            finalPosition.y = (90 * Math.signum(finalPosition.y)) - over;
+        }
+        return finalPosition;
+    }
+
+    public String finalPositionToString() {
+        //converts final position to a string
+        Vector3 finalPosition = getFinalPosition();
+        return(finalPosition.x + "," + finalPosition.y);
     }
 
     @NonNull
