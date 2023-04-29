@@ -8,4 +8,5 @@
     <string name="map_button">Open in Maps</string>
     <string name="sync_button">Sync</string>
     <string name="hit_button">Hit</string>
+    <string name="hitTextText">temp</string>
 </resources>
