@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -40,11 +41,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "GOOGLE_SIGN_IN_TAG";
 
+    String teamName = "A";
+
     // create db
     FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-    // current available team number
-    int teamNum = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +108,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onRadioButtonClicked(View view) {
+        boolean checked = ((RadioButton) view).isChecked();
+
+        // check which radio button was clicked
+        switch(view.getId()) {
+            case R.id.radio_a:
+                if (checked) {
+                    teamName = "A";
+                }
+                break;
+            case R.id.radio_b:
+                if (checked){
+                    teamName = "B";
+                }
+                break;
+        }
+    }
+
     private void firebaseAuthWithGoogleAccount(GoogleSignInAccount account) {
         // start Firebase Auth with Google Account
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
@@ -128,18 +146,12 @@ public class MainActivity extends AppCompatActivity {
                             // new account is created
                             Toast.makeText(MainActivity.this, "Account Created!\n" + email, Toast.LENGTH_SHORT).show();
                             // get reference to the document
-                            DocumentReference ref = FirebaseFirestore.getInstance().collection("teams").document(String.valueOf(teamNum));
+                            DocumentReference ref = FirebaseFirestore.getInstance().collection("teams").document(String.valueOf(teamName));
                             // update members by adding new account to team
                             ref.update("members", FieldValue.arrayUnion(email));
                         } else {
                             // account is an existing user
                             Toast.makeText(MainActivity.this, "Existing Account!\n" + email, Toast.LENGTH_SHORT).show();
-
-                            // TESTING: increment the points of the team
-                            // get reference to the document
-                            DocumentReference ref = FirebaseFirestore.getInstance().collection("teams").document(String.valueOf(teamNum));
-                            // update the points
-                            ref.update("points", FieldValue.increment(1));
                         }
 
                         // start profile activity

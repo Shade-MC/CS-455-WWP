@@ -10,7 +10,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -50,6 +49,9 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
     TextView gpsText;
     Button syncButton;
     FusedLocationProviderClient fusedLocationProviderClient;
+
+    TextView scoreTxt;
+    TextView teamTxt;
 
     private TextView ballStats;
     private GameThread gameThread;
@@ -107,6 +109,11 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
         surfaceView.getHolder().addCallback(this);
 
         this.ballStats = findViewById(R.id.ballStats);
+
+        scoreTxt = findViewById(R.id.scoreTxt);
+
+        teamTxt = findViewById(R.id.teamTxt);
+        teamTxt.setText("Team A");
     }
 
     private void checkUser() {
@@ -205,6 +212,7 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
             // initialize HTTPClient
             this.httpClient = HttpClientBuilder.create().build();
             syncButton.setOnClickListener(v -> getBallPosition());
+            getScore();
         }
 
         public void setSurfaceHolder(SurfaceHolder surfaceHolder) {
@@ -235,6 +243,29 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
             });
 
         }
+
+        private void getScore() {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            executor.submit(() -> {
+                HttpGet getScore = new HttpGet("http://10.0.2.2:8080/getScore");
+                StringBuilder ballScore = new StringBuilder();
+                try {
+                    HttpResponse response = this.httpClient.execute(getScore);
+                    InputStream inputStream = response.getEntity().getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        ballScore.append(line);
+                    }
+                    scoreTxt.setText("Score: " + ballScore);
+                } catch (IOException e) {
+                    System.out.println("IOexemption");
+                }
+            });
+
+        }
+
         @Override
         public void run() {
             while (isRunning) {
