@@ -7,4 +7,5 @@
     <string name="update_location_button">Update Location</string>
     <string name="map_button">Open in Maps</string>
     <string name="sync_button">Sync</string>
+    <string name="hit_button">Hit</string>
 </resources>
