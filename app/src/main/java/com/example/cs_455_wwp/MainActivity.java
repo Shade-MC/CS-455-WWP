@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "GOOGLE_SIGN_IN_TAG";
 
-    String teamName = "A";
+    private String teamName = "A";
 
     // create db
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -84,9 +84,15 @@ public class MainActivity extends AppCompatActivity {
         // if user is already logged in,
         if (firebaseUser != null){
             // go to profile activity first
-            startActivity(new Intent(this, GameActivity.class));
-            finish();
+            startGame();
         }
+    }
+
+    private void startGame(){
+        Intent intent = new Intent(this, GameActivity.class);
+        intent.putExtra("team", this.teamName);
+        startActivity(intent);
+        finish();
     }
 
     // handle result of the sign-in request
@@ -155,8 +161,7 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         // start profile activity
-                        startActivity(new Intent(MainActivity.this, GameActivity.class));
-                        finish();
+                        startGame();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
