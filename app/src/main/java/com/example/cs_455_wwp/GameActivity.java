@@ -8,9 +8,9 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -18,14 +18,24 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.example.cs_455_wwp.databinding.ActivityGameBinding;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.ar.sceneform.math.Vector3;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpResponse;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.HttpClient;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.methods.HttpGet;
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.methods.HttpPost;
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.entity.StringEntity;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.impl.client.HttpClientBuilder;
+import com.jakewharton.threetenabp.AndroidThreeTen;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.threeten.bp.Instant;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,9 +56,10 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
     // initialize variables for GPS
     Button locationBtn;
     Button mapButton;
-
-    TextView gpsText;
+    Button hitButton;
     Button syncButton;
+    TextView gpsText;
+    TextView hitText;
     FusedLocationProviderClient fusedLocationProviderClient;
 
     private TextView ballStats;
@@ -72,10 +83,13 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
             checkUser();
         });
 
+        AndroidThreeTen.init(this);
+
         // set up GPS variables
         locationBtn = findViewById(R.id.locationBtn);
         gpsText = findViewById(R.id.gpsStats);
-
+        hitButton = findViewById(R.id.hit);
+        hitText = findViewById(R.id.hitText);
         syncButton = findViewById(R.id.sync);
 
         // initialize fusedLocationProviderClient
@@ -205,6 +219,10 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
             // initialize HTTPClient
             this.httpClient = HttpClientBuilder.create().build();
             syncButton.setOnClickListener(v -> getBallPosition());
+            hitButton.setOnClickListener(v -> sendLocationPing());
+            getBallPosition();
+            sendLocationPing();
+            sendLocationPing();
         }
 
         public void setSurfaceHolder(SurfaceHolder surfaceHolder) {
@@ -214,27 +232,81 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
             this.isRunning = isRunning;
         }
 
+
         private void getBallPosition() {
             ExecutorService executor = Executors.newSingleThreadExecutor();
 
             executor.submit(() -> {
                 HttpGet getBall = new HttpGet("http://10.0.2.2:8080/getPosition");
-                StringBuilder ballString = new StringBuilder();
                 try {
                     HttpResponse response = this.httpClient.execute(getBall);
-                    InputStream inputStream = response.getEntity().getContent();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        ballString.append(line);
-                    }
-                    gameBall.setVectors(ballString.toString());
+                    String responseString = responseToString(response);
+                    assert responseString != null;
+                    gameBall.setVectors(responseString);
                 } catch (IOException e) {
-                    System.out.println("IOexemption");
+                    Log.e("HTTP_RESPONSE", e.getMessage());
                 }
             });
 
         }
+
+        private void sendLocationPing(){
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            executor.submit(() -> {
+                //TODO: Read users actual location
+                Vector3 ballPosition = this.gameBall.getPosition();
+                LocationPing currentLocation = new LocationPing(ballPosition.x, ballPosition.y,
+                        firebaseAuth.getUid(), Instant.now().toString());
+                //Object to convert LocationPoint into a JSON object
+                ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+                try {
+                    JSONObject body = new JSONObject(ow.writeValueAsString(currentLocation));
+                    HttpPost sendPing = new HttpPost("http://10.0.2.2:8080/hitBall");
+                    //Set JSON object to body of http POST
+                    sendPing.setEntity(new StringEntity(body.toString()));
+
+                    HttpResponse response = httpClient.execute(sendPing);
+                    String responseString = responseToString(response);
+
+                    Log.d("BALL_HIT", responseString);
+                    hitText.setText(responseString);
+
+                    //Clear text after 2 seconds
+                    ExecutorService exe = Executors.newSingleThreadExecutor();
+                    exe.submit(() -> {
+                        try {
+                            sleep(2000);
+                        } catch (InterruptedException e) {
+                            // Do Nothing
+                        }
+                        hitText.setText(null);
+
+                    });
+
+                } catch (JSONException | java.io.IOException e) {
+                    Log.e("PARSE_JSON", e.getMessage());
+                }
+            });
+        }
+
+        private String responseToString(HttpResponse response){
+            try {
+                InputStream inputStream = response.getEntity().getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                StringBuilder responseString = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    responseString.append(line);
+                }
+                return responseString.toString();
+            } catch (IOException e) {
+                Log.e("HTTP_RESPONSE", e.getMessage());
+            }
+            return null;
+        }
+
+
         @Override
         public void run() {
             while (isRunning) {
