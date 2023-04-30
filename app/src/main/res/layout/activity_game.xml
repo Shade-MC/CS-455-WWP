@@ -30,24 +30,34 @@
         app:layout_constraintTop_toBottomOf="@+id/emailTxt" />
 
     <TextView
-        android:id="@+id/loginTxt"
+        android:id="@+id/teamTxt"
         style="@style/TextAppearance.MaterialComponents.Caption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/login_text"
+        android:text="@string/team_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
         android:id="@+id/emailTxt"
-        style="@style/TextAppearance.MaterialComponents.Body1"
+        style="@style/TextAppearance.MaterialComponents.Body2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/email_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/loginTxt"/>
+        app:layout_constraintTop_toBottomOf="@id/teamTxt"/>
+
+    <TextView
+        android:id="@+id/scoreTxt"
+        style="@style/TextAppearance.MaterialComponents.Body1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Score"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/emailTxt"/>
 
     <Button
         android:id="@+id/logoutBtn"
@@ -67,7 +77,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/emailTxt" />
+        app:layout_constraintTop_toBottomOf="@+id/scoreTxt" />
 
     <Button
         android:id="@+id/locationBtn"

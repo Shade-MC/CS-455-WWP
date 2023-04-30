@@ -62,6 +62,9 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
     TextView hitText;
     FusedLocationProviderClient fusedLocationProviderClient;
 
+    TextView scoreTxt;
+    TextView teamTxt;
+
     private TextView ballStats;
     private GameThread gameThread;
     private boolean isRunning;
@@ -121,6 +124,10 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
         surfaceView.getHolder().addCallback(this);
 
         this.ballStats = findViewById(R.id.ballStats);
+
+        scoreTxt = findViewById(R.id.scoreTxt);
+
+        teamTxt = findViewById(R.id.teamTxt);
     }
 
     private void checkUser() {
@@ -212,17 +219,21 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
         private boolean isRunning;
         private long lastFrameTime;
         private final HttpClient httpClient;
+        private String playerTeam;
 
         public GameThread() {
+            this.playerTeam = getIntent().getStringExtra("team");
             this.gameBall = new Ball();
             lastFrameTime = System.nanoTime();
             // initialize HTTPClient
             this.httpClient = HttpClientBuilder.create().build();
-            syncButton.setOnClickListener(v -> getBallPosition());
+            syncButton.setOnClickListener(v -> sync());
+            getScore();
             hitButton.setOnClickListener(v -> sendLocationPing());
             getBallPosition();
             sendLocationPing();
             sendLocationPing();
+            teamTxt.setText("Team " + this.playerTeam);
         }
 
         public void setSurfaceHolder(SurfaceHolder surfaceHolder) {
@@ -230,6 +241,11 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         public void setRunning(boolean isRunning) {
             this.isRunning = isRunning;
+        }
+
+        public void sync(){
+            getBallPosition();
+            getScore();
         }
 
 
@@ -250,6 +266,28 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         }
 
+        private void getScore() {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            executor.submit(() -> {
+                HttpGet getScore = new HttpGet("http://10.0.2.2:8080/getScore");
+                StringBuilder ballScore = new StringBuilder();
+                try {
+                    HttpResponse response = this.httpClient.execute(getScore);
+                    InputStream inputStream = response.getEntity().getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        ballScore.append(line);
+                    }
+                    scoreTxt.setText(ballScore);
+                } catch (IOException e) {
+                    System.out.println("IOexemption");
+                }
+            });
+
+        }
+
         private void sendLocationPing(){
             ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -257,7 +295,7 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 //TODO: Read users actual location
                 Vector3 ballPosition = this.gameBall.getPosition();
                 LocationPing currentLocation = new LocationPing(ballPosition.x, ballPosition.y,
-                        firebaseAuth.getUid(), Instant.now().toString());
+                        firebaseAuth.getUid(), Instant.now().toString(), this.playerTeam);
                 //Object to convert LocationPoint into a JSON object
                 ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
                 try {
@@ -281,7 +319,6 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             // Do Nothing
                         }
                         hitText.setText(null);
-
                     });
 
                 } catch (JSONException | java.io.IOException e) {
