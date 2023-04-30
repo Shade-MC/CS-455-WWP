@@ -128,7 +128,6 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
         scoreTxt = findViewById(R.id.scoreTxt);
 
         teamTxt = findViewById(R.id.teamTxt);
-        teamTxt.setText("Team A");
     }
 
     private void checkUser() {
@@ -234,7 +233,7 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
             getBallPosition();
             sendLocationPing();
             sendLocationPing();
-
+            teamTxt.setText("Team " + this.playerTeam);
         }
 
         public void setSurfaceHolder(SurfaceHolder surfaceHolder) {
@@ -281,7 +280,7 @@ public class GameActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     while ((line = reader.readLine()) != null) {
                         ballScore.append(line);
                     }
-                    scoreTxt.setText("Score: " + ballScore);
+                    scoreTxt.setText(ballScore);
                 } catch (IOException e) {
                     System.out.println("IOexemption");
                 }
