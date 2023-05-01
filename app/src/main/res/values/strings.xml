@@ -9,4 +9,8 @@
     <string name="sync_button">Sync</string>
     <string name="hit_button">Hit</string>
     <string name="hitTextText">temp</string>
+    <string name="title_text">Worldwide Pong</string>
+    <string name="radio_text">Select a Team</string>
+    <string name="text_a">Team A</string>
+    <string name="text_b">Team B</string>
 </resources>
