@@ -161,6 +161,6 @@ public class Ball {
     public String toString(){
         return  "Position: " + this.position.toString() + "\n" +
                 "Speed: " + this.speed.toString() + "\n" +
-                "Acceleration: " + this.acceleration.toString();
+                "Acceleration: " + this.acceleration.toString() + "\n";
     }
 }

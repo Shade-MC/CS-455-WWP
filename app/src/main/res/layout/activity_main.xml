@@ -6,24 +6,48 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/appTitle"
+        style="@style/TextAppearance.MaterialComponents.Headline3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/title_text"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/radioTxt"/>
+
+    <TextView
+        android:id="@+id/radioTxt"
+        style="@style/TextAppearance.MaterialComponents.Body1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/radio_text"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/radioGroup"/>
+
     <RadioGroup
+        android:id="@+id/radioGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        app:layout_constraintBottom_toTopOf="@id/googleSignInBtn"
+        android:checkedButton="@+id/radio_a"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
         <RadioButton android:id="@+id/radio_a"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Team A"
+            android:text="@string/text_a"
             android:onClick="onRadioButtonClicked"/>
         <RadioButton android:id="@+id/radio_b"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Team B"
+            android:text="@string/text_b"
             android:onClick="onRadioButtonClicked"/>
     </RadioGroup>
 
@@ -35,6 +59,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/radioGroup"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
